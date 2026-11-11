@@ -22,11 +22,19 @@ jobs:
           gradle-version: '8.13'
       - name: Install Android SDK
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Install approved Annavue logo resources
+        run: |
+          mkdir -p app/src/main/res/drawable-nodpi
+          base64 --decode brand/annavue_icon.jpg.b64 > app/src/main/res/drawable-nodpi/annavue_brand_logo.jpg
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            mkdir -p app/src/main/res/mipmap-$density
+            cp app/src/main/res/drawable-nodpi/annavue_brand_logo.jpg app/src/main/res/mipmap-$density/ic_launcher.jpg
+          done
       - name: Run tests and build debug APK
         run: gradle --no-daemon testDebugUnitTest assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AnnaVideoPlayer-debug
+          name: Annavue-0.2.0-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
