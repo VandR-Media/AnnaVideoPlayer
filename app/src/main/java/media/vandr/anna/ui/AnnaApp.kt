@@ -1,5 +1,6 @@
 package media.vandr.anna.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import media.vandr.anna.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
@@ -105,13 +109,12 @@ fun AnnaApp(
                 ).padding(start = 20.dp, end = 14.dp, top = 15.dp, bottom = 11.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.size(42.dp).clip(RoundedCornerShape(15.dp))
-                            .background(Brush.linearGradient(listOf(Magenta, Color(0xFF8D4DFF), DeepViolet))),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(29.dp))
-                    }
+                    Image(
+                        painter = painterResource(R.drawable.annavue_brand_logo),
+                        contentDescription = "Логотип Annavue",
+                        modifier = Modifier.size(50.dp).clip(RoundedCornerShape(13.dp)),
+                        contentScale = ContentScale.Crop
+                    )
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text("ANNAVUE", fontWeight = FontWeight.ExtraBold, fontSize = 21.sp, letterSpacing = 2.1.sp, color = Color(0xFFF5E9FF))
