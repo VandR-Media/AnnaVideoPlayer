@@ -31,13 +31,26 @@ jobs:
           from PIL import Image
           from pathlib import Path
           source = Image.open("/tmp/annavue_full_logo.jpg").convert("RGB")
-          # The approved source is a 160x160 launcher icon, not the 1254px master.
-          # Keep its upper illustration area; the previous 1254px crop coordinates
-          # selected an almost entirely empty region and produced a black header tile.
+          # The source is a padded launcher tile. Detect the actual luminous artwork
+          # in its upper illustration region before scaling; fixed-coordinate crops
+          # preserve the huge empty margins and make the mark appear tiny.
           width, height = source.size
-          mark = source.crop((0, 0, width, int(height * 0.62)))
+          region = source.crop((0, 0, width, int(height * 0.70)))
+          import numpy as np
+          pixels = np.asarray(region)
+          mask = (pixels.max(axis=2) > 34) & ((pixels.max(axis=2) - pixels.min(axis=2)) > 10)
+          ys, xs = np.where(mask)
+          if len(xs) == 0:
+              raise SystemExit("Could not detect the neon illustration in the approved logo source")
+          pad_x = max(4, int((xs.max() - xs.min() + 1) * 0.05))
+          pad_y = max(4, int((ys.max() - ys.min() + 1) * 0.05))
+          left = max(0, int(xs.min()) - pad_x)
+          top = max(0, int(ys.min()) - pad_y)
+          right = min(width, int(xs.max()) + 1 + pad_x)
+          bottom = min(int(height * 0.70), int(ys.max()) + 1 + pad_y)
+          mark = region.crop((left, top, right, bottom))
           canvas = Image.new("RGB", (720, 720), (8, 6, 16))
-          mark.thumbnail((680, 450), Image.Resampling.LANCZOS)
+          mark.thumbnail((660, 660), Image.Resampling.LANCZOS)
           canvas.paste(mark, ((720 - mark.width) // 2, (720 - mark.height) // 2))
           out = Path("app/src/main/res/drawable-nodpi/annavue_brand_mark.png")
           out.parent.mkdir(parents=True, exist_ok=True)
@@ -53,6 +66,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Annavue-0.4.0-debug
+          name: Annavue-0.5.0-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
