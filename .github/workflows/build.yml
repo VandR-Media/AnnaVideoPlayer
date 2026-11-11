@@ -26,6 +26,7 @@ jobs:
         run: |
           mkdir -p app/src/main/res/drawable-nodpi
           base64 --decode brand/annavue_icon.jpg.b64 > /tmp/annavue_full_logo.jpg
+          python3 -m pip install --quiet pillow
           python3 - <<'PY'
           from PIL import Image
           from pathlib import Path
