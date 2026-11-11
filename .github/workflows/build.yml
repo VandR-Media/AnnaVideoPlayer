@@ -25,7 +25,21 @@ jobs:
       - name: Install approved Annavue logo resources
         run: |
           mkdir -p app/src/main/res/drawable-nodpi
-          base64 --decode brand/annavue_icon.jpg.b64 > app/src/main/res/drawable-nodpi/annavue_brand_logo.jpg
+          base64 --decode brand/annavue_icon.jpg.b64 > /tmp/annavue_full_logo.jpg
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          source = Image.open("/tmp/annavue_full_logo.jpg").convert("RGB")
+          # Keep only Anna's neon silhouette, glasses and film strip; remove all typography.
+          mark = source.crop((110, 70, 1170, 775))
+          canvas = Image.new("RGB", (720, 720), (8, 6, 16))
+          mark.thumbnail((680, 450), Image.Resampling.LANCZOS)
+          canvas.paste(mark, ((720 - mark.width) // 2, (720 - mark.height) // 2))
+          out = Path("app/src/main/res/drawable-nodpi/annavue_brand_mark.png")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          canvas.save(out, optimize=True)
+          PY
+          cp /tmp/annavue_full_logo.jpg app/src/main/res/drawable-nodpi/annavue_brand_logo.jpg
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             mkdir -p app/src/main/res/mipmap-$density
             cp app/src/main/res/drawable-nodpi/annavue_brand_logo.jpg app/src/main/res/mipmap-$density/ic_launcher.jpg
@@ -35,6 +49,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Annavue-0.3.0-debug
+          name: Annavue-0.4.0-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
