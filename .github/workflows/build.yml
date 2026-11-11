@@ -31,8 +31,11 @@ jobs:
           from PIL import Image
           from pathlib import Path
           source = Image.open("/tmp/annavue_full_logo.jpg").convert("RGB")
-          # Keep only Anna's neon silhouette, glasses and film strip; remove all typography.
-          mark = source.crop((110, 70, 1170, 775))
+          # The approved source is a 160x160 launcher icon, not the 1254px master.
+          # Keep its upper illustration area; the previous 1254px crop coordinates
+          # selected an almost entirely empty region and produced a black header tile.
+          width, height = source.size
+          mark = source.crop((0, 0, width, int(height * 0.62)))
           canvas = Image.new("RGB", (720, 720), (8, 6, 16))
           mark.thumbnail((680, 450), Image.Resampling.LANCZOS)
           canvas.paste(mark, ((720 - mark.width) // 2, (720 - mark.height) // 2))
