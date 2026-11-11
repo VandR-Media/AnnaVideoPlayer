@@ -29,9 +29,11 @@ import kotlinx.coroutines.withContext
 import media.vandr.anna.data.*
 import java.util.Locale
 
-private val Ink = Color(0xFF0B0B13)
-private val Panel = Color(0xFF171725)
-private val Lilac = Color(0xFFC6A7FF)
+private val Ink = Color(0xFF080610)
+private val Panel = Color(0xFF171020)
+private val Lilac = Color(0xFFD6A1FF)
+private val Magenta = Color(0xFFFF4EDB)
+private val DeepViolet = Color(0xFF24103D)
 private val Muted = Color(0xFFA5A5B8)
 
 @Composable
@@ -42,9 +44,18 @@ fun AnnaTheme(content: @Composable () -> Unit) {
             background = Ink, onBackground = Color(0xFFF7F3FF),
             surface = Panel, onSurface = Color(0xFFF7F3FF),
             surfaceVariant = Color(0xFF292839), onSurfaceVariant = Muted,
-            secondary = Color(0xFF87E6DC)
+            secondary = Magenta,
+            tertiary = Color(0xFF9B5CFF),
+            surfaceTint = Lilac
         ),
         typography = Typography(),
+        shapes = Shapes(
+            extraSmall = RoundedCornerShape(10.dp),
+            small = RoundedCornerShape(14.dp),
+            medium = RoundedCornerShape(20.dp),
+            large = RoundedCornerShape(26.dp),
+            extraLarge = RoundedCornerShape(30.dp)
+        ),
         content = content
     )
 }
@@ -86,25 +97,25 @@ fun AnnaApp(
     }
 
     Scaffold(
-        containerColor = Ink,
+        containerColor = Color.Transparent,
         topBar = {
             Column(
                 Modifier.statusBarsPadding().background(
-                    Brush.verticalGradient(listOf(Color(0xFF1B1530), Ink))
+                    Brush.verticalGradient(listOf(Color(0xFF28103B), Color(0xFF130C20), Ink))
                 ).padding(start = 20.dp, end = 14.dp, top = 15.dp, bottom = 11.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier.size(42.dp).clip(RoundedCornerShape(15.dp))
-                            .background(Color(0xFF644AA0)),
+                            .background(Brush.linearGradient(listOf(Magenta, Color(0xFF8D4DFF), DeepViolet))),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("А", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(29.dp))
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("АННА", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, letterSpacing = 2.sp)
-                        Text("Твоя видеотека в кармане", fontSize = 11.sp, color = Muted)
+                        Text("ANNAVUE", fontWeight = FontWeight.ExtraBold, fontSize = 21.sp, letterSpacing = 2.1.sp, color = Color(0xFFF5E9FF))
+                        Text("See more. Feel more.", fontSize = 11.sp, color = Lilac, letterSpacing = 0.7.sp)
                     }
                     if (current != Tab.STREAM) {
                         IconButton(onClick = onRefresh) {
@@ -127,14 +138,14 @@ fun AnnaApp(
                         shape = RoundedCornerShape(18.dp),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Lilac, unfocusedBorderColor = Color(0xFF393349)
+                            focusedBorderColor = Magenta, unfocusedBorderColor = Color(0xFF514064), cursorColor = Magenta
                         )
                     )
                 }
             }
         },
         bottomBar = {
-            NavigationBar(containerColor = Panel, tonalElevation = 0.dp) {
+            NavigationBar(containerColor = Color(0xFF110B1B), tonalElevation = 0.dp) {
                 for (tab in Tab.entries) {
                     NavigationBarItem(
                         selected = tab == current,
@@ -159,7 +170,7 @@ fun AnnaApp(
             }
         }
     ) { innerPadding ->
-        Column(Modifier.fillMaxSize().padding(innerPadding)) {
+        Column(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF130C20), Ink, Color(0xFF0C0814)))).padding(innerPadding)) {
             if (current == Tab.STREAM) {
                 StreamTab(onPlay = onPlay, history = history, refreshToken = refreshToken)
             } else if (!canReadVideos) {
@@ -241,7 +252,7 @@ private fun FolderTab(
                 items(groups.entries.toList(), key = { it.key }) { entry ->
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(19.dp))
-                            .background(Panel).clickable { folder = entry.key }.padding(12.dp),
+                            .background(Brush.linearGradient(listOf(Color(0xFF251633), Panel))).clickable { folder = entry.key }.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         VideoCover(entry.value.first().uri, Modifier.size(width = 110.dp, height = 70.dp).clip(RoundedCornerShape(12.dp)))
@@ -283,7 +294,7 @@ private fun VideoList(
             val isFavorite = remember(version, uri) { history.isFavorite(uri) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-                    .background(Panel).clickable { onPlay(uri, video.title) }.padding(9.dp),
+                    .background(Brush.linearGradient(listOf(Color(0xFF251633), Panel))).clickable { onPlay(uri, video.title) }.padding(9.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box {
@@ -346,7 +357,7 @@ private fun StreamTab(onPlay: (String, String) -> Unit, history: PlaybackHistory
             Spacer(Modifier.width(8.dp))
             Text("Воспроизвести", fontWeight = FontWeight.Bold)
         }
-        HorizontalDivider(color = Color(0xFF332E44))
+        HorizontalDivider(color = Color(0xFF4A315F))
         Text("Поддерживаются открытые ссылки и потоки, к которым у вас есть доступ. Это не обход подписок или защиты DRM.", color = Muted, fontSize = 12.sp)
         Text("Онлайн-каталог фильмов будет отдельным модулем после выбора доступного и легального источника.", color = Muted, fontSize = 12.sp)
         if (recentlyWatched.isNotEmpty()) {
@@ -355,7 +366,7 @@ private fun StreamTab(onPlay: (String, String) -> Unit, history: PlaybackHistory
             recentlyWatched.forEach { link ->
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-                        .background(Panel).clickable { onPlay(link, "Видео из интернета") }
+                        .background(Brush.linearGradient(listOf(Color(0xFF251633), Panel))).clickable { onPlay(link, "Видео из интернета") }
                         .padding(13.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
