@@ -112,8 +112,8 @@ fun AnnaApp(
                     Image(
                         painter = painterResource(R.drawable.annavue_brand_logo),
                         contentDescription = "Логотип Annavue",
-                        modifier = Modifier.size(50.dp).clip(RoundedCornerShape(13.dp)),
-                        contentScale = ContentScale.Crop
+                        modifier = Modifier.size(68.dp).clip(RoundedCornerShape(17.dp)),
+                        contentScale = ContentScale.Fit
                     )
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
@@ -386,11 +386,17 @@ private fun StreamTab(onPlay: (String, String) -> Unit, history: PlaybackHistory
 private fun EmptyScreen(title: String, subtitle: String, button: String? = null, action: () -> Unit = {}) {
     Box(Modifier.fillMaxSize().padding(28.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Icon(Icons.Filled.VideoLibrary, contentDescription = null, modifier = Modifier.size(62.dp), tint = Lilac)
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(subtitle, color = Muted, fontSize = 14.sp, lineHeight = 20.sp)
+            Box(
+                modifier = Modifier.size(82.dp).clip(RoundedCornerShape(25.dp))
+                    .background(Brush.linearGradient(listOf(Color(0xFF3A1858), Color(0xFF160D24)))),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.VideoLibrary, contentDescription = null, modifier = Modifier.size(48.dp), tint = Lilac)
+            }
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFFF7F3FF))
+            Text(subtitle, color = Color(0xFFC7BBD5), fontSize = 14.sp, lineHeight = 20.sp)
             if (button != null) {
-                Button(onClick = action, shape = RoundedCornerShape(14.dp)) { Text(button) }
+                Button(onClick = action, shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = Lilac, contentColor = Color(0xFF24153E))) { Text(button, color = Color(0xFF24153E), fontWeight = FontWeight.SemiBold) }
             }
         }
     }
