@@ -39,7 +39,7 @@ GitHub Actions: [Android APK](../../actions/workflows/build.yml).
 
 ## Технологии
 
-Kotlin 2.3.21 · Android Gradle Plugin 8.13.2 · Compose BOM 2026.09.00 · Media3 1.11.1 · Android MediaStore · SharedPreferences.
+Kotlin 2.3.21 · Android Gradle Plugin 8.13.2 · Compose BOM 2026.04.01 · Media3 1.11.1 · Android MediaStore · SharedPreferences.
 
 ## План развития
 
