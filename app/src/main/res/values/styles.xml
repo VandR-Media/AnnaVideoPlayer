@@ -1,8 +1,10 @@
 <resources>
   <style name="Theme.Anna" parent="android:style/Theme.Material.NoActionBar">
       <item name="android:windowLightStatusBar">false</item>
-      <item name="android:statusBarColor">#0B0B13</item>
-      <item name="android:navigationBarColor">#0B0B13</item>
+      <item name="android:statusBarColor">#080610</item>
+      <item name="android:navigationBarColor">#080610</item>
       <item name="android:windowActionModeOverlay">true</item>
+      <item name="android:windowBackground">@drawable/annavue_splash_background</item>
+      <item name="android:colorAccent">#D6A1FF</item>
   </style>
 </resources>
