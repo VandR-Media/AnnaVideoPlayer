@@ -110,15 +110,32 @@ fun AnnaApp(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
-                        painter = painterResource(R.drawable.annavue_brand_logo),
-                        contentDescription = "Логотип Annavue",
-                        modifier = Modifier.size(68.dp).clip(RoundedCornerShape(17.dp)),
+                        painter = painterResource(R.drawable.annavue_brand_mark),
+                        contentDescription = "Графический знак Annavue",
+                        modifier = Modifier.size(76.dp).clip(RoundedCornerShape(17.dp)),
                         contentScale = ContentScale.Fit
                     )
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("ANNAVUE", fontWeight = FontWeight.ExtraBold, fontSize = 21.sp, letterSpacing = 2.1.sp, color = Color(0xFFF5E9FF))
-                        Text("See more. Feel more.", fontSize = 11.sp, color = Lilac, letterSpacing = 0.7.sp)
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                        Text(
+                            "ANNAVUE",
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 27.sp,
+                            letterSpacing = 2.0.sp,
+                            color = Color(0xFFF5E9FF),
+                            maxLines = 1
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            "See more. Feel more.",
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                            fontWeight = FontWeight.Normal,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            fontSize = 13.sp,
+                            color = Lilac,
+                            letterSpacing = 0.35.sp
+                        )
                     }
                     if (current != Tab.STREAM) {
                         IconButton(onClick = onRefresh) {
