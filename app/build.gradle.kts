@@ -3,6 +3,24 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+val releaseStoreFile = providers.environmentVariable("ANNAVUE_STORE_FILE").orNull
+val releaseStorePassword = providers.environmentVariable("ANNAVUE_STORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("ANNAVUE_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("ANNAVUE_KEY_PASSWORD").orNull
+val releaseSigningConfigured = listOf(
+    releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword
+).all { !it.isNullOrBlank() }
+val releaseTaskRequested = gradle.startParameter.taskNames.any {
+    it.contains("release", ignoreCase = true)
+}
+if (releaseTaskRequested && !releaseSigningConfigured) {
+    throw GradleException(
+        "Release APK must be signed. Configure ANNAVUE_STORE_FILE, ANNAVUE_STORE_PASSWORD, " +
+            "ANNAVUE_KEY_ALIAS and ANNAVUE_KEY_PASSWORD; never commit the keystore."
+    )
+}
+
 android {
     namespace = "media.vandr.anna"
     compileSdk = 36
@@ -14,8 +32,21 @@ android {
         versionName = "0.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        create("release") {
+            if (releaseSigningConfigured) {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -28,6 +59,7 @@ android {
     buildFeatures { compose = true }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
+
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
