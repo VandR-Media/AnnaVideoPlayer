@@ -1,15 +1,20 @@
 name: Android APK
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    env:
+      RELEASE_SIGNING_READY: ${{ secrets.ANNAVUE_KEYSTORE_BASE64 != '' && secrets.ANNAVUE_STORE_PASSWORD != '' && secrets.ANNAVUE_KEY_ALIAS != '' && secrets.ANNAVUE_KEY_PASSWORD != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -31,12 +36,8 @@ jobs:
           from PIL import Image
           from pathlib import Path
           source = Image.open("/tmp/annavue_full_logo.jpg").convert("RGB")
-          # The source is a padded launcher tile. Detect the actual luminous artwork
-          # in its upper illustration region before scaling; fixed-coordinate crops
-          # preserve the huge empty margins and make the mark appear tiny.
           width, height = source.size
           region = source.crop((0, 0, width, int(height * 0.70)))
-          # Pillow-only pixel scan: keep this step independent of NumPy.
           pixels = region.load()
           xs, ys = [], []
           for y in range(region.height):
@@ -66,11 +67,37 @@ jobs:
             mkdir -p app/src/main/res/mipmap-$density
             cp app/src/main/res/drawable-nodpi/annavue_brand_logo.jpg app/src/main/res/mipmap-$density/ic_launcher.jpg
           done
-      - name: Run tests and build debug APK
+      - name: Run unit tests and build debug APK
         run: gradle --no-daemon testDebugUnitTest assembleDebug
-      - name: Upload APK
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: Annavue-0.5.0-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+      - name: Prepare release signing key
+        if: env.RELEASE_SIGNING_READY == 'true'
+        env:
+          ANNAVUE_KEYSTORE_BASE64: ${{ secrets.ANNAVUE_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p app/signing
+          printf '%s' "$ANNAVUE_KEYSTORE_BASE64" | base64 --decode > app/signing/annavue-release.jks
+          chmod 600 app/signing/annavue-release.jks
+      - name: Build signed release APK
+        if: env.RELEASE_SIGNING_READY == 'true'
+        env:
+          ANNAVUE_STORE_FILE: app/signing/annavue-release.jks
+          ANNAVUE_STORE_PASSWORD: ${{ secrets.ANNAVUE_STORE_PASSWORD }}
+          ANNAVUE_KEY_ALIAS: ${{ secrets.ANNAVUE_KEY_ALIAS }}
+          ANNAVUE_KEY_PASSWORD: ${{ secrets.ANNAVUE_KEY_PASSWORD }}
+        run: gradle --no-daemon testReleaseUnitTest assembleRelease
+      - name: Upload signed release APK
+        if: env.RELEASE_SIGNING_READY == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Annavue-0.5.0-release-signed
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+      - name: Explain skipped signed release
+        if: env.RELEASE_SIGNING_READY != 'true'
+        run: echo "::notice::Signed release skipped because the four ANNAVUE signing secrets are not configured."
