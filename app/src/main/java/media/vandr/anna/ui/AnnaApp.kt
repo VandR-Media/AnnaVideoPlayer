@@ -357,7 +357,7 @@ private fun StreamTab(onPlay: (String, String) -> Unit, history: PlaybackHistory
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text("Смотреть по ссылке", fontSize = 23.sp, fontWeight = FontWeight.Bold)
-        Text("Откройте прямую ссылку на видео или прямой эфир. Работают HTTP(S), HLS (.m3u8), DASH (.mpd), RTSP и совместимые потоки.", color = Muted, fontSize = 14.sp)
+        Text("Откройте защищённую HTTPS-ссылку на видео или прямой эфир. Поддерживаются HLS (.m3u8), DASH (.mpd), RTSP и совместимые потоки.", color = Muted, fontSize = 14.sp)
         OutlinedTextField(
             value = url, onValueChange = { url = it },
             modifier = Modifier.fillMaxWidth(),
@@ -378,7 +378,7 @@ private fun StreamTab(onPlay: (String, String) -> Unit, history: PlaybackHistory
             Text("Воспроизвести", fontWeight = FontWeight.Bold)
         }
         HorizontalDivider(color = Color(0xFF4A315F))
-        Text("Поддерживаются открытые ссылки и потоки, к которым у вас есть доступ. Это не обход подписок или защиты DRM.", color = Muted, fontSize = 12.sp)
+        Text("Обычный HTTP отключён: он передаёт данные без шифрования. Используйте HTTPS, если источник его поддерживает. RTSP также может быть незашифрованным. Приложение не обходит подписки или DRM.", color = Muted, fontSize = 12.sp)
         Text("Онлайн-каталог фильмов будет отдельным модулем после выбора доступного и легального источника.", color = Muted, fontSize = 12.sp)
         if (recentlyWatched.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))

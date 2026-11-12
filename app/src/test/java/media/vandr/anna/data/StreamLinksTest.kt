@@ -4,13 +4,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class StreamLinksTest {
-    @Test fun acceptsCommonStreamProtocols() {
+    @Test fun acceptsSecureAndSupportedStreamProtocols() {
         assertTrue(StreamLinks.supported("https://example.org/movie.m3u8?token=123"))
-        assertTrue(StreamLinks.supported("http://example.org/video.mp4"))
+        assertTrue(StreamLinks.supported("HTTPS://example.org/video.mp4"))
         assertTrue(StreamLinks.supported("rtsp://example.org/live"))
     }
 
-    @Test fun rejectsUnsafeOrMalformedLinks() {
+    @Test fun rejectsCleartextAndMalformedLinks() {
+        assertFalse(StreamLinks.supported("http://example.org/video.mp4"))
         assertFalse(StreamLinks.supported("file:///sdcard/secret.mp4"))
         assertFalse(StreamLinks.supported("javascript:alert(1)"))
         assertFalse(StreamLinks.supported("example.org/video.mp4"))
