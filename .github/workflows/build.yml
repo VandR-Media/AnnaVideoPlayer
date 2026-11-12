@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      # Release credentials are considered only for the protected default branch.
+      # Release credentials are considered only for the default branch.
       RELEASE_SIGNING_READY: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.ANNAVUE_KEYSTORE_BASE64 != '' && secrets.ANNAVUE_STORE_PASSWORD != '' && secrets.ANNAVUE_KEY_ALIAS != '' && secrets.ANNAVUE_KEY_PASSWORD != '' }}
     steps:
       - name: Check out source
