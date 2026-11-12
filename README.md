@@ -24,9 +24,41 @@
 
 ## Сборка APK
 
-GitHub Actions: [Android APK](../../actions/workflows/build.yml).
+### Локальная сборка
 
-Workflow выполняет unit-тесты и собирает Debug APK. Если настроены четыре секрета подписи, он дополнительно собирает и публикует подписанный Release APK.
+Для сборки нужны JDK 17 и Android SDK с платформой API 36 и Build Tools 36.0.0. Отдельно устанавливать Gradle не требуется: в репозитории находится Gradle Wrapper 8.13.
+
+Linux/macOS:
+
+```bash
+./gradlew --version
+./gradlew --no-daemon --stacktrace clean testDebugUnitTest lintDebug assembleDebug
+```
+
+Windows:
+
+```bat
+gradlew.bat --version
+gradlew.bat --no-daemon --stacktrace clean testDebugUnitTest lintDebug assembleDebug
+```
+
+Готовый Debug APK:
+
+`app/build/outputs/apk/debug/app-debug.apk`
+
+Wrapper загружает только Gradle 8.13 с официального HTTPS-адреса и сверяет архив с опубликованной Gradle SHA-256 суммой из `gradle-wrapper.properties`. Wrapper JAR дополнительно проверяется Gradle Setup Action в CI.
+
+### GitHub Actions
+
+Workflow **Android APK** выполняет:
+
+1. Проверку Gradle Wrapper.
+2. Unit-тесты.
+3. Android Lint.
+4. Чистую сборку Debug APK без повторного использования Gradle build cache.
+5. Публикацию APK как артефакта GitHub Actions.
+
+Для Pull Request сборка Debug выполняется без доступа к секретам подписи. Подписанный Release APK собирается только при запуске workflow на ветке `main` и наличии всех четырёх секретов. GitHub Actions используют зафиксированные commit SHA вместо плавающих тегов; Dependabot отслеживает обновления Actions и Gradle.
 
 ### Настройка постоянной подписи
 
@@ -39,14 +71,17 @@ Workflow выполняет unit-тесты и собирает Debug APK. Ес�
 - `ANNAVUE_KEY_ALIAS` — alias ключа.
 - `ANNAVUE_KEY_PASSWORD` — пароль ключа.
 
-Не добавляйте keystore, пароли или Base64 ключа в Git, Issues, Pull Requests или обычные файлы проекта. После настройки секретов следующий запуск GitHub Actions сможет собрать подписанный Release APK. Один и тот же ключ необходимо сохранять для всех будущих обновлений.
+Не добавляйте keystore, пароли или Base64 ключа в Git, Issues, Pull Requests или обычные файлы проекта. После настройки секретов запуск workflow на `main` сможет собрать подписанный Release APK. Один и тот же ключ необходимо сохранять для всех будущих обновлений. Временный файл keystore удаляется в конце job.
 
 ### Проверки
 
-1. JDK 17, Gradle 8.13 и Android SDK API 36.
-2. Unit-тесты: `testDebugUnitTest` и, при настроенной подписи, `testReleaseUnitTest`.
-3. Сборка Debug: `assembleDebug`.
-4. Подписанная сборка Release: `assembleRelease` (только при наличии всех четырёх секретов).
+- JDK 17.
+- Gradle Wrapper 8.13 с проверкой официальной SHA-256 суммы.
+- Android SDK API 36 и Build Tools 36.0.0.
+- Unit-тесты: `testDebugUnitTest` и, при настроенной подписи, `testReleaseUnitTest`.
+- Android Lint: `lintDebug`.
+- Сборка Debug: `assembleDebug`.
+- Подписанная сборка Release: `assembleRelease` (только при наличии всех четырёх секретов и запуске на `main`).
 
 Успешная сборка не заменяет проверку на реальном Huawei и не гарантирует отсутствие предупреждений AppGallery/EMUI при установке APK из внешнего источника.
 
