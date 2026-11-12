@@ -2,7 +2,7 @@
 
 Нативный видеоплеер для Huawei и Android, созданный в честь Анны.
 
-**Статус:** MVP 0.5.1. Требуется проверка на Huawei Pura 80 Ultra (EMUI 15).
+**Статус:** MVP 0.5.2. Релизная подпись обязательна; Debug APK не распространяется. Требуется проверка на Huawei Pura 80 Ultra (EMUI 15).
 
 ## Возможности первой версии
 
@@ -27,6 +27,9 @@
 - Сетевые соединения HTTP запрещены на уровне Android Network Security Configuration; доверие ограничено системными центрами сертификации.
 - Приложение не использует рекламу, аналитику, GMS или сторонние серверы для отправки медиатеки.
 - Резервное копирование приложения отключено. Для локальной медиатеки запрашивается только необходимый доступ к видео.
+- **Debug APK не является пользовательским релизом:** он помечен `debuggable=true`, подписан тестовым сертификатом Android Debug и содержит инструменты разработчика. CI использует его только для тестирования и больше не публикует как APK для установки.
+- Для установки предназначен только подписанный Release APK с постоянным ключом. В CI проверяются подпись, выравнивание APK, отсутствие флага debuggable и отладочной `PreviewActivity`.
+- Предупреждение Huawei при установке через «Файлы» может сохраняться даже у корректно подписанного APK: Huawei отдельно проверяет приложения, а AppGallery предупреждает о приложениях, распространяемых вне официального магазина. Для официальной проверки нужен AppGallery Connect и предварительный анализ APK.
 
 ## Сборка APK
 
@@ -48,9 +51,7 @@ gradlew.bat --version
 gradlew.bat --no-daemon --stacktrace clean testDebugUnitTest lintDebug assembleDebug
 ```
 
-Готовый Debug APK:
-
-`app/build/outputs/apk/debug/app-debug.apk`
+Debug APK собирается только для автоматической проверки и не предназначен для установки пользователем. Установочный файл создаётся как `app/build/outputs/apk/release/app-release.apk` только после настройки постоянной подписи.
 
 Wrapper загружает только Gradle 8.13 с официального HTTPS-адреса и сверяет архив с опубликованной Gradle SHA-256 суммой из `gradle-wrapper.properties`. Wrapper JAR дополнительно проверяется Gradle Setup Action в CI.
 
@@ -59,12 +60,13 @@ Wrapper загружает только Gradle 8.13 с официального 
 Workflow **Android APK** выполняет:
 
 1. Проверку Gradle Wrapper.
-2. Unit-тесты.
-3. Android Lint.
-4. Чистую сборку Debug APK без повторного использования Gradle build cache.
-5. Публикацию APK как артефакта GitHub Actions.
+2. Unit-тесты и Android Lint.
+3. Сборку Debug APK только для внутренней проверки CI — без публикации файла.
+4. На `main`, если настроена постоянная подпись, сборку Release APK.
+5. Проверку Release APK через `apksigner`, `zipalign` и Android manifest: APK должен быть подписан, не должен быть debuggable и не должен содержать Compose PreviewActivity.
+6. Публикацию только подписанного Release APK как артефакта GitHub Actions.
 
-Для Pull Request сборка Debug выполняется без доступа к секретам подписи. Подписанный Release APK собирается только при запуске workflow на ветке `main` и наличии всех четырёх секретов. GitHub Actions используют зафиксированные commit SHA вместо плавающих тегов; Dependabot отслеживает обновления Actions и Gradle.
+Если секреты подписи не настроены, CI явно сообщает, что установочный APK не выпущен. Он не подменяет релиз отладочной сборкой.
 
 ### Настройка постоянной подписи
 
@@ -84,10 +86,11 @@ Workflow **Android APK** выполняет:
 - JDK 17.
 - Gradle Wrapper 8.13 с проверкой официальной SHA-256 суммы.
 - Android SDK API 36 и Build Tools 36.0.0.
-- Unit-тесты: `testDebugUnitTest` и, при настроенной подписи, `testReleaseUnitTest`.
-- Android Lint: `lintDebug`.
-- Сборка Debug: `assembleDebug`.
-- Подписанная сборка Release: `assembleRelease` (только при наличии всех четырёх секретов и запуске на `main`).
+- Unit-тесты: `testDebugUnitTest`; `testReleaseUnitTest` при настроенной подписи.
+- Android Lint: `lintDebug`; `lintRelease` при настроенной подписи.
+- Debug-сборка: `assembleDebug` только для CI-проверок.
+- Подписанная Release-сборка: `assembleRelease` только при наличии всех четырёх секретов и запуске на `main`.
+- Проверка подписи и release-манифеста: `apksigner`, `zipalign`, `aapt`.
 
 Успешная сборка не заменяет проверку на реальном Huawei и не гарантирует отсутствие предупреждений AppGallery/EMUI при установке APK из внешнего источника.
 

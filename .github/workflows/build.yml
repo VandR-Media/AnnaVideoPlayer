@@ -49,14 +49,6 @@ jobs:
       - name: Run unit tests, Android Lint, and build debug APK
         run: ./gradlew --no-daemon --stacktrace --no-build-cache clean testDebugUnitTest lintDebug assembleDebug
 
-      - name: Upload debug APK
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: Annavue-0.5.1-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Prepare release signing key
         if: env.RELEASE_SIGNING_READY == 'true'
         env:
@@ -74,13 +66,45 @@ jobs:
           ANNAVUE_STORE_PASSWORD: ${{ secrets.ANNAVUE_STORE_PASSWORD }}
           ANNAVUE_KEY_ALIAS: ${{ secrets.ANNAVUE_KEY_ALIAS }}
           ANNAVUE_KEY_PASSWORD: ${{ secrets.ANNAVUE_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon --stacktrace --no-build-cache testReleaseUnitTest assembleRelease
+        run: ./gradlew --no-daemon --stacktrace --no-build-cache testReleaseUnitTest lintRelease assembleRelease
+
+      - name: Verify release APK is production-safe
+        if: env.RELEASE_SIGNING_READY == 'true'
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/release/app-release.apk"
+          AAPT="$ANDROID_HOME/build-tools/36.0.0/aapt"
+          APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          ZIPALIGN="$ANDROID_HOME/build-tools/36.0.0/zipalign"
+
+          "$ZIPALIGN" -c -v 4 "$APK"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee "$RUNNER_TEMP/apk-signature.txt"
+
+          BADGING="$("$AAPT" dump badging "$APK")"
+          if grep -q "application-debuggable" <<< "$BADGING"; then
+            echo "::error::Release APK is marked debuggable."
+            exit 1
+          fi
+
+          MANIFEST="$("$AAPT" dump xmltree "$APK" AndroidManifest.xml)"
+          if grep -q "androidx.compose.ui.tooling.PreviewActivity" <<< "$MANIFEST"; then
+            echo "::error::Debug-only Compose PreviewActivity leaked into the release APK."
+            exit 1
+          fi
+
+          if grep -qi "CN=Android Debug" "$RUNNER_TEMP/apk-signature.txt"; then
+            echo "::error::Release APK was signed with the Android debug certificate."
+            exit 1
+          fi
+
+          echo "$BADGING" | grep "^package:"
+          echo "::notice::Release APK is aligned, signed, non-debuggable, and excludes Compose PreviewActivity."
 
       - name: Upload signed release APK
         if: env.RELEASE_SIGNING_READY == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: Annavue-0.5.1-release-signed
+          name: Annavue-0.5.2-release-signed
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
@@ -88,6 +112,11 @@ jobs:
       - name: Explain skipped signed release
         if: env.RELEASE_SIGNING_READY != 'true' && github.event_name != 'pull_request'
         run: echo "::notice::Signed release skipped. Run this workflow on main and configure all four ANNAVUE signing secrets."
+
+      - name: Explain missing release signing configuration
+        if: env.RELEASE_SIGNING_READY != 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          echo "::warning::No installable APK was published. Configure all four ANNAVUE signing secrets to produce the signed Release APK. Debug APKs are intentionally not uploaded."
 
       - name: Remove temporary signing key
         if: always() && env.RELEASE_SIGNING_READY == 'true'
